@@ -31,6 +31,13 @@ default = {
 }
 settings = config.load(default)
 
+local IN_FRONT_MOBS = {
+	'Tiger',
+	'Beetle',
+	'Rabbit',
+	'Lizard',
+}
+
 -- Widget
 local texts = require('texts')
 local function setup_text(text)
@@ -106,6 +113,9 @@ function go_path(path, curr)
 	-- log(dump(node))
 	fsd_to('pu', node.x, node.y, function()
 		if curr+1 <= #path then
+			if array_in_string(IN_FRONT_MOBS, node.name) then
+				coroutine.sleep(0.5)
+			end
 			go_path(path, curr+1)
 		else
 			log('Finished!!!')
@@ -116,17 +126,31 @@ function go_path(path, curr)
 	end)
 end
 
+function get_position_in_front(mob)
+    if not mob or not mob.x or not mob.y or not mob.facing then
+        return nil
+    end
+
+	local distance = (array_in_string(IN_FRONT_MOBS, mob.name)) and mob.model_size or 0
+    local rad = mob.facing
+    local dx = distance * math.sin(rad + math.pi / 2)
+    local dy = distance * math.cos(rad + math.pi / 2)
+
+    return mob.x + dx, mob.y + dy, mob.z
+end
+
 function main(middle)
 	targets = {}
 	for key,mob in pairs(windower.ffxi.get_mob_array()) do
 		if mob["valid_target"] and mob['spawn_type']==16 and xy_get_distance(mob, middle) < settings.monitor_range and mob.hpp > 0 then
+			local x, y, z = get_position_in_front(mob)
 			table.insert(targets, {
 				['index'] = mob.index,
 				['id'] = mob.id,
 				['name'] = mob.name,
-				['x'] = mob.x,
-				['y'] = mob.y,
-				['z'] = mob.z,
+				['x'] = x,
+				['y'] = y,
+				['z'] = z,
 			})
 		end
 	end
