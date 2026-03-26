@@ -12,6 +12,7 @@ require('mylibs/aggro')
 local enabled = false
 local timer = os.clock()
 local targets = {}
+local cb_cmd = nil
 
 -- Settings
 config = require('config')
@@ -108,6 +109,9 @@ function go_path(path, curr)
 			go_path(path, curr+1)
 		else
 			log('Finished!!!')
+			if cb_cmd then
+				windower.send_command('input //'..cb_cmd..' PULLER_done')
+			end
 		end
 	end)
 end
@@ -149,6 +153,9 @@ windower.register_event('addon command', function (command, ...)
 		if target then
 			enabled = true
 			log('Let\'s Pull!!!!')
+			if #args >= 1 then
+				cb_cmd = args[1]
+			end
 			main(target)
 		else
 			windower.add_to_chat(2, 'Not target...')
