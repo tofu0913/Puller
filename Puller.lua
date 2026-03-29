@@ -63,14 +63,14 @@ end
 function tsp_nearest_neighbor(points)
     local n = #points
     if n == 0 then return {}, 0 end
-    if n == 1 then return {1}, 0 end
+    if n == 1 then return {points[1].id}, 0 end
 
     local visited = {}
-    local path = {}          -- 存放點的索引
+    local path = {}
     local total_dist = 0
 
     local current = 1
-    table.insert(path, current)
+    table.insert(path, points[current].id)
     visited[current] = true
 
     for _ = 1, n-1 do
@@ -87,7 +87,7 @@ function tsp_nearest_neighbor(points)
             end
         end
 
-        table.insert(path, next_point)
+        table.insert(path, points[next_point].id)
         total_dist = total_dist + min_d
         visited[next_point] = true
         current = next_point
@@ -109,7 +109,12 @@ function go_path(path, curr)
 	if not enabled then return end
 
 	log(curr..'/'..#path)
-	local node = targets[path[curr]]
+	local node = nil
+	if path[curr] == -1 then
+		node = targets[#targets]
+	else
+		node = windower.ffxi.get_mob_by_id(path[curr])
+	end
 	-- log(dump(node))
 	fsd_to('pu', node.x, node.y, function()
 		if curr+1 <= #path then
@@ -159,12 +164,15 @@ function main(middle)
 		local self = windower.ffxi.get_mob_by_index(windower.ffxi.get_player().index)
 		table.insert(targets, {
 			['name'] = 'goal',
+			['id'] = -1,
 			['x'] = self.x,
 			['y'] = self.y,
 			['z'] = self.z,
 		})
-		table.insert(path, #targets)
+		table.insert(path, -1)
 	end
+	-- for k,v in pairs(targets) do log(v.id) end
+	-- for k,v in pairs(path) do log(v) end
 	go_path(path, 1)
 end
 
